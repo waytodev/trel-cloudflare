@@ -1,0 +1,36 @@
+{
+  "name": "@trel-to/cloudflare",
+  "version": "0.3.0",
+  "description": "Trel SDK for Cloudflare Workers - OpenTelemetry-compatible observability for trel.to",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/waytodev/trel.git"
+  },
+  "keywords": [
+    "trel",
+    "observability",
+    "opentelemetry",
+    "otel",
+    "cloudflare",
+    "workers",
+    "tracing",
+    "otlp"
+  ],
+  "files": [
+    "src",
+    "README.md"
+  ],
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "scripts": {
+    "build": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20241127.0",
+    "typescript": "^5.3.3"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}
