@@ -1,9 +1,8 @@
 /**
  * Trel SDK for Cloudflare Workers
- * Wraps your worker's fetch handler to add tracing and send OTLP data to ingest.trel.to
  *
  * Usage: import { withTrel } from '@trel-to/cloudflare';
- * export default withTrel({ apiKey: 'trel_sk_xxx', service: 'my-worker' }, { fetch: ... });
+ * export default withTrel({ apiKey: 'trel_sk_xxx', service: 'my-worker', environment: 'qa' }, { fetch: ... });
  */
 
 interface ExecutionContext {
@@ -15,6 +14,7 @@ const DEFAULT_ENDPOINT = "https://ingest.trel.to";
 export interface TrelConfig {
   apiKey: string;
   service?: string;
+  environment?: string;
   endpoint?: string;
 }
 
@@ -52,14 +52,20 @@ async function sendTrace(
   attributes: Record<string, string>
 ): Promise<void> {
   const url = `${config.endpoint ?? DEFAULT_ENDPOINT}/v1/traces`;
+  const resourceAttrs = [
+    { key: "service.name", value: { stringValue: config.service ?? "unknown" } },
+  ];
+  if (config.environment) {
+    resourceAttrs.push({
+      key: "deployment.environment",
+      value: { stringValue: config.environment },
+    });
+  }
+
   const payload = {
     resourceSpans: [
       {
-        resource: {
-          attributes: [
-            { key: "service.name", value: { stringValue: config.service ?? "unknown" } },
-          ],
-        },
+        resource: { attributes: resourceAttrs },
         scopeSpans: [
           {
             spans: [
@@ -67,9 +73,9 @@ async function sendTrace(
                 traceId: traceId.padStart(32, "0"),
                 spanId: spanId.padStart(16, "0"),
                 name: attributes["http.route"] ?? attributes["http.target"] ?? "request",
-                kind: 1,
-                startTimeUnixNano: String(startTime * 1e9),
-                endTimeUnixNano: String(endTime * 1e9),
+                kind: 2,
+                startTimeUnixNano: String(Math.round(startTime * 1e9)),
+                endTimeUnixNano: String(Math.round(endTime * 1e9)),
                 status: { code: status === "error" ? 2 : 1 },
                 attributes: Object.entries(attributes).map(([k, v]) => ({
                   key: k,
@@ -83,13 +89,16 @@ async function sendTrace(
     ],
   };
 
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+    "x-trel-key": config.apiKey,
+  };
+  if (config.environment) headers["x-trel-environment"] = config.environment;
+
   try {
     await fetch(url, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "x-trel-key": config.apiKey,
-      },
+      headers,
       body: JSON.stringify(payload),
     });
   } catch (e) {
@@ -130,7 +139,7 @@ export function withTrel<T extends WorkerHandler>(
           "http.method": request.method,
           "http.url": url.toString(),
           "http.target": url.pathname,
-          "http.status_code": "500",
+          "http.response.status_code": "500",
         })
       );
       throw err;
@@ -142,7 +151,7 @@ export function withTrel<T extends WorkerHandler>(
         "http.method": request.method,
         "http.url": url.toString(),
         "http.target": url.pathname,
-        "http.status_code": String(statusCode),
+        "http.response.status_code": String(statusCode),
       })
     );
 
