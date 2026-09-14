@@ -1,6 +1,6 @@
 {
   "name": "@trel-to/cloudflare",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "Trel SDK for Cloudflare Workers - OpenTelemetry-compatible observability for trel.to",
   "license": "MIT",
   "repository": {

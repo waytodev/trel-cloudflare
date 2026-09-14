@@ -32,7 +32,12 @@ export default withTrel(
 | ---------- | -------- | -------------------- | ----------------------------- |
 | `apiKey`   | Yes      | —                    | Your Trel API key             |
 | `service`  | No       | `'unknown'`          | Service name for your worker  |
+| `environment` | No    | `'production'`       | Deployment environment        |
+| `release`  | No       | —                    | Release tag (git sha / semver); enables release health + source maps |
+| `attributes` | No     | —                    | Attributes merged into every span |
 | `endpoint` | No       | `https://ingest.trel.to` | Custom ingestion URL      |
+
+Incoming `traceparent` headers are honoured, so the Worker span joins the caller's trace. Use `ctx.waitUntil(captureException(config, err, { traceId }))` to report a caught error as an `exception` event.
 
 **OpenTelemetry support:** Sends OTLP-formatted traces to Trel's ingestion endpoint. Use with any OTLP collector or alongside other OTEL instrumentations.
 
