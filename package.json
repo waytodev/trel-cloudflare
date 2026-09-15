@@ -5,7 +5,11 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/waytodev/trel.git"
+    "url": "https://github.com/waytodev/trel-cloudflare.git"
+  },
+  "homepage": "https://docs.trel.to/cloudflare",
+  "bugs": {
+    "url": "https://github.com/waytodev/trel-cloudflare/issues"
   },
   "keywords": [
     "trel",
